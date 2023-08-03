@@ -118,7 +118,8 @@ If error persists please contact system administrator!!''')
 
 def sendTeamsAlert(dataframe):       
     # import libraries here
-    bot_url = ''
+    import os
+    bot_url = f"https://hogeschoolutrecht.webhook.office.com/webhookb2/{os.getenv('webhook')}/IncomingWebhook/{os.getenv('incomingwebhook')}"
     headers = {
         'Content-Type': 'application/json'
     }

@@ -12,7 +12,7 @@ Before writing the application we need to setup a [function app](https://learn.m
 The app `pbi-refresh-logging` is created on the `HU-PLG-DWH-DataPlatfrom` resource on the DENA Azure portal. In Visual studio code a connection is made to this app and from there a local template is created. The Azure functions extension has a variety of templates to choose from, one of which is the python time trigger template. This gives you the necessary files to get started. Two of which are most important, the `function.json` file and the `__init__.py file`. The former is used to set the time trigger and the latter is the file that runs the python script. Once we set this up, we can start writing our code!
 
 ### Getting dataset info
-As stated, the goal of this app is to get daily info on whether or not the refresh of the datasets were successful. In order to do this, we first we need to get the information from the HU Power BI tenant thru the API. A service principal has been added to the Power BI tenant that is used to retrieve this information. In order use this service principal we need to get an access token from the Microsoft server. In the authentication folder we have a function that retrieves this token. 
+As stated, the goal of this app  to get daily info on whether or not the refresh of the datasets were successful. In order to do this, we first we need to get the information from the HU Power BI tenant thru the API. A service principal has been added to the Power BI tenant that is used to retrieve this information. In order use this service principal we need to get an access token from the Microsoft server. In the authentication folder we have a function that retrieves this token. 
 
 ```python
 def getAccessToken(resource, client_id, client_secret, domain):
@@ -145,7 +145,8 @@ Once you have set this up you have a connection to teams, with the following pyt
 ```python
 def sendTeamsAlert(dataframe):       
     # import libraries here
-    bot_url = '<enter your bot url from the webhook here>'
+    import os
+    bot_url = f"https://hogeschoolutrecht.webhook.office.com/webhookb2/{os.getenv('webhook')}/IncomingWebhook/{os.getenv('incomingwebhook')}"
     headers = {
         'Content-Type': 'application/json'
     }
@@ -209,5 +210,5 @@ def sendTeamsAlert(dataframe):
 
 ### Deploying the function app with time trigger 
 
-Now that your app is completed in can be deployed to the function on Azure. Before we do this however we need to set the time, this is done with a [cron expression](https://en.wikipedia.org/wiki/Cron#CRON_expression) in the `function.json` file on the schedule line. A cron expression is a string with 6 separate expressions which represent a given schedule via patterns. The pattern we use to represent every 5 minutes is `0 */5 * * * *`. This, in plain text, means: "When seconds is equal to 0, minutes is divisible by 5, for any hour, day of the month, month, day of the week, or year". Our app is set to run every weekday at 7 in the morning. 
+Now that your app is completed in can be deployed to the function on Azure. Before we do this however we need to set the time, this is done with a [cron expression](https://en.wikipedia.org/wiki/Cron#CRON_expression) in the `function.json` file on the schedule line. A cron expression is a string with 6 separate expressions which represent a given schedule via patterns. The pattern we use to represent every 5 minutes is `0 */5 * * * *`. This, in plain text, means: "When seconds is equal to 0, minutes is divisible by 5, for any hour, day of the month, month, day of the week, or year". Our app is set to run every weekday at 7 in the morning. `schedule": "0 0 7 * * 1-5`
 
