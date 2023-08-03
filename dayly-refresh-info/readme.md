@@ -36,18 +36,18 @@ Both the `clientId` as the `clientSecret` have been added to the to `KV-DENA` ke
 
 ### Adding Vault to Function App
 In order to give our function access to the vault we need to manually add this access in the Azure portal. First go to the DENA vault and go to the Access policies tab on the left and click on create.
-![image](images\acces-policies.png)
+![image](https://github.com/ALeemans/function-app-refreshlogging/blob/master/dayly-refresh-info/images/acces-policies.png)
 Select get and list from the Secret permissions pane, this will allow the app to read from the vault.
-![image](images\get-list.png)
+![image](https://github.com/ALeemans/function-app-refreshlogging/blob/master/dayly-refresh-info/images/get-list.png)
 Selecte the app you created from the principal list.
-![image](images\select-principal.png)
+![image](https://github.com/ALeemans/function-app-refreshlogging/blob/master/dayly-refresh-info/images/select-principal.png)
 The app now has access to the vault. You need to add access to specific secrets however. Browse to the vault secret you would like to use (in this case we need the clientId and the clientSecret from the Power BI API service principal) and click on the current version.
-![image](images\vault-clientId.png)
+![image](https://github.com/ALeemans/function-app-refreshlogging/blob/master/dayly-refresh-info/images/vault-clientId.png)
 Copy the secret identifier and keep it in your clipboard. Browse to your function app in the azure portal and go to the configurations pane. 
-![image](images\config-pane-function.png)
+![image](https://github.com/ALeemans/function-app-refreshlogging/blob/master/dayly-refresh-info/images/config-pane-function.png)
 click on application setting, in the popup enter under name the name of the secret (in this case the clientId) and under value type `@Microsoft.KeyVault(SecretUri=<paste-from-clipboard.)` and paste the url that you just copied.
-![image](images\application-setting.png)
-Follow the same steps for the clientSecret. Both have now been added to the function app and can be read from your python script. 
+![image](https://github.com/ALeemans/function-app-refreshlogging/blob/master/dayly-refresh-info/images/application-setting.png)
+Follow the same steps for the clientSecret and the webhook and incoming webhook. All four have now been added to the function app and can be read from your python script. 
 
 
 ### Writing the python code
