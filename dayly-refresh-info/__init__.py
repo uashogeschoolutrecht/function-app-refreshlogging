@@ -14,7 +14,7 @@ def main(mytimer: func.TimerRequest) -> None:
 
     if mytimer.past_due:
         logging.info('The timer is past due!')
-        
+
     # Set parameters
     domain = 'hu.nl'
     resource = 'https://analysis.windows.net/powerbi/api'
@@ -29,7 +29,6 @@ def main(mytimer: func.TimerRequest) -> None:
         print(
             f'Client ID and client secret could not be loaded from Azure keyvault!')
         print(e)
-
 
     # workspace name can not contain special characters
     workspaceName = 'prod datasources'
@@ -50,9 +49,6 @@ def main(mytimer: func.TimerRequest) -> None:
     failed = results[results['status'] == 'Failed']
     failed.reset_index(drop=True, inplace=True)
 
-
     sendTeamsAlert(failed)
 
     logging.info('Python timer trigger function ran at %s', utc_timestamp)
-
-
