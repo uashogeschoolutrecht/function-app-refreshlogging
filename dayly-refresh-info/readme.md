@@ -7,7 +7,7 @@ The goal of this application is to give updates on the refresh status of the Pow
 ### Setting up the Function App
 Before writing the application we need to setup a [function app](https://learn.microsoft.com/en-us/azure/azure-functions/functions-overview?pivots=programming-language-python) where the application can be deployed. Essentially a function app is a piece of script (in this case a python script) that is stored on an Azure server and can be trigger in several ways (in our case by a time trigger). 
 
-![image](dayly-refresh-info\images\trigger-flow.png)
+![image](function-app-refreshlogging\dayly-refresh-info\images\trigger-flow.png)
 
 The app `pbi-refresh-logging` is created on the `HU-PLG-DWH-DataPlatfrom` resource on the DENA Azure portal. In Visual studio code a connection is made to this app and from there a local template is created. The Azure functions extension has a variety of templates to choose from, one of which is the python time trigger template. This gives you the necessary files to get started. Two of which are most important, the `function.json` file and the `__init__.py file`. The former is used to set the time trigger and the latter is the file that runs the python script. Once we set this up, we can start writing our code!
 
