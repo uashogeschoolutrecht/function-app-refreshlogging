@@ -116,10 +116,10 @@ If error persists please contact system administrator!!''')
 
 
 
-def sendTeamsAlert(dataframe):       
+def sendTeamsAlert(dataframe,webhook,incomingwebhook):       
     # import libraries here
     import os
-    bot_url = f"https://hogeschoolutrecht.webhook.office.com/webhookb2/{os.getenv('webhook')}/IncomingWebhook/{os.getenv('incomingwebhook')}"
+    bot_url = f"https://hogeschoolutrecht.webhook.office.com/webhookb2/{webhook}/IncomingWebhook/{incomingwebhook}"
     headers = {
         'Content-Type': 'application/json'
     }

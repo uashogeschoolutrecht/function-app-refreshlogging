@@ -70,7 +70,6 @@ instance/
 docs/_build/
 
 # vscode
-.vscode/
 
 # PyBuilder
 target/

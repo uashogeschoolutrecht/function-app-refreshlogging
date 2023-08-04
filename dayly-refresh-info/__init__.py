@@ -15,12 +15,13 @@ def main(mytimer: func.TimerRequest) -> None:
     if mytimer.past_due:
         logging.info('The timer is past due!')
 
-    # Set parameters
+    # Set parameters for API
     domain = 'hu.nl'
     resource = 'https://analysis.windows.net/powerbi/api'
 
     try:
         import os
+        # Load API connection secrets from Vault connection in function app
         clientId = os.getenv('clientId')
         clientSecret = os.getenv('clientSecret')
         print(
@@ -30,7 +31,7 @@ def main(mytimer: func.TimerRequest) -> None:
             f'Client ID and client secret could not be loaded from Azure keyvault!')
         print(e)
 
-    # workspace name can not contain special characters
+    # workspace name can not contain special characters! 
     workspaceName = 'prod datasources'
 
     # get acces token
@@ -44,11 +45,27 @@ def main(mytimer: func.TimerRequest) -> None:
             f'AccessToken could not be loaded from microsoftonline!')
         print(e)
 
+    # Start application
     apiconn = REFRESHDATASET(accessToken, workspaceName)
+
+    # Get refresh info
     results = apiconn.getRefreshInfo()
     failed = results[results['status'] == 'Failed']
     failed.reset_index(drop=True, inplace=True)
 
-    sendTeamsAlert(failed)
+    try:
+        import os
+        # Load webhook secrets from Vault connection in function app
+        webhook = os.getenv('webhook')
+        incomingwebhook = os.getenv('incomingwebhook')
+        print(
+            f'Webhook secrets succesfully loaded from Azure keyvault!')
+    except Exception as e:
+        print(
+            f'Webhook secrets could not be loaded from Azure keyvault!')
+        print(e)
+    
+    # Send teams message
+    sendTeamsAlert(failed, webhook, incomingwebhook)
 
     logging.info('Python timer trigger function ran at %s', utc_timestamp)

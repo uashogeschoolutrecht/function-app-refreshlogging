@@ -143,10 +143,10 @@ Now that we have our refresh information, we can send a message to the team’s 
 Once you have set this up you have a connection to teams, with the following python code you can send updates:
 
 ```python
-def sendTeamsAlert(dataframe):       
+def sendTeamsAlert(dataframe,webhook,incomingwebhook):       
     # import libraries here
     import os
-    bot_url = f"https://hogeschoolutrecht.webhook.office.com/webhookb2/{os.getenv('webhook')}/IncomingWebhook/{os.getenv('incomingwebhook')}"
+    bot_url = f"https://hogeschoolutrecht.webhook.office.com/webhookb2/{webhook}/IncomingWebhook/{incomingwebhook}"
     headers = {
         'Content-Type': 'application/json'
     }
@@ -203,6 +203,7 @@ def sendTeamsAlert(dataframe):
 
         response = requests.request("POST", bot_url, headers=headers, data=payload)
         print(response.text)
+    
 ```
 
 

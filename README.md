@@ -140,13 +140,13 @@ The two input variables form the class are the accesstoken (which can be retriev
 ### Post messages to Team channel
 Now that we have our refresh information, we can send a message to the team’s channel. In order to do this, we need to set up a connection with the Webhook application in Microsoft teams (you need to request access with the IT department). Please check the [documentation](https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=dotnet) on how to setup the webhook. 
 
-Once you have set this up you have a connection to teams, with the following python code you can send updates:
+Once you have set this up you have a connection string to teams. Add both the webhook and the incomingwebhook keys to the vault. With the following python code you can send updates:
 
 ```python
-def sendTeamsAlert(dataframe):       
+def sendTeamsAlert(dataframe,webhook,incomingwebhook):       
     # import libraries here
     import os
-    bot_url = f"https://hogeschoolutrecht.webhook.office.com/webhookb2/{os.getenv('webhook')}/IncomingWebhook/{os.getenv('incomingwebhook')}"
+    bot_url = f"https://hogeschoolutrecht.webhook.office.com/webhookb2/{webhook}/IncomingWebhook/{incomingwebhook}"
     headers = {
         'Content-Type': 'application/json'
     }
@@ -203,12 +203,12 @@ def sendTeamsAlert(dataframe):
 
         response = requests.request("POST", bot_url, headers=headers, data=payload)
         print(response.text)
+    
 ```
 
 
 
+## Deploying the function app with time trigger 
 
-### Deploying the function app with time trigger 
-
-Now that your app is completed in can be deployed to the function on Azure. Before we do this however we need to set the time, this is done with a [cron expression](https://en.wikipedia.org/wiki/Cron#CRON_expression) in the `function.json` file on the schedule line. A cron expression is a string with 6 separate expressions which represent a given schedule via patterns. The pattern we use to represent every 5 minutes is `0 */5 * * * *`. This, in plain text, means: "When seconds is equal to 0, minutes is divisible by 5, for any hour, day of the month, month, day of the week, or year". Our app is set to run every weekday at 7 in the morning. `schedule": "0 0 7 * * 1-5`
+Now that your app is completed it can be deployed to the function on Azure. Before we do this however we need to set the time, this is done with a [cron expression](https://en.wikipedia.org/wiki/Cron#CRON_expression) in the `function.json` file on the schedule line. A cron expression is a string with 6 separate expressions which represent a given schedule via patterns. The pattern we use to represent every 5 minutes is `0 */5 * * * *`. This, in plain text, means: "When seconds is equal to 0, minutes is divisible by 5, for any hour, day of the month, month, day of the week, or year". Our app is set to run every weekday at 7 in the morning. `schedule": "0 0 7 * * 1-5`
 
