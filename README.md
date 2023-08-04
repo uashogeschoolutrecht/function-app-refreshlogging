@@ -1,18 +1,19 @@
 # Refresh logging Power BI datasets
 
-## Goal
-The goal of this application is to give updates on the refresh status of the Power BI datasets. This is done with a python script that both reads from the Power BI tenant as well as posts messages to the Data & Analytics teams channel. The application is deployed to Azure as a function app.  
+## Introduction
+The purpose of this application is to provide updates on the refresh status of Power BI datasets. The application utilizes a Python script to retrieve data from the Power BI tenant and post messages to the Data & Analytics team's channel. The application is deployed as an Azure function app.
 
 
 ### Setting up the Function App
-Before writing the application we need to setup a [function app](https://learn.microsoft.com/en-us/azure/azure-functions/functions-overview?pivots=programming-language-python) where the application can be deployed. Essentially a function app is a piece of script (in this case a python script) that is stored on an Azure server and can be trigger in several ways (in our case by a time trigger). 
+Before writing the application, you need to set up a [function app](https://learn.microsoft.com/en-us/azure/azure-functions/functions-overview?pivots=programming-language-python) in Azure where the application can be deployed. A function app is a script (in this case, a Python script) stored on an Azure server that can be triggered in various ways, such as a time trigger.
 
 ![image](https://github.com/ALeemans/function-app-refreshlogging/blob/master/dayly-refresh-info/images/trigger-flow.png)
 
-The app `pbi-refresh-logging` is created on the `HU-PLG-DWH-DataPlatfrom` resource on the DENA Azure portal. In Visual studio code a connection is made to this app and from there a local template is created. The Azure functions extension has a variety of templates to choose from, one of which is the python time trigger template. This gives you the necessary files to get started. Two of which are most important, the `function.json` file and the `__init__.py file`. The former is used to set the time trigger and the latter is the file that runs the python script. Once we set this up, we can start writing our code!
+The app named  `pbi-refresh-logging` is created on the `HU-PLG-DWH-DataPlatfrom` resource in the DENA Azure portal. The application is created in Visual Studio Code, and a local template is generated from the Azure functions extension, specifically using the Python time trigger template. This provides essential files to begin development, including `function.json` for time trigger configuration and `__init__.py file` to run the Python script.
 
-### Getting dataset info
-As stated, the goal of this app  to get daily info on whether or not the refresh of the datasets were successful. In order to do this, we first we need to get the information from the HU Power BI tenant thru the API. A service principal has been added to the Power BI tenant that is used to retrieve this information. In order use this service principal we need to get an access token from the Microsoft server. In the authentication folder we have a function that retrieves this token. 
+### Getting Dataset Information
+
+The primary objective of the app is to retrieve daily updates on the success of dataset refreshes. To achieve this, the application needs to fetch information from the HU Power BI tenant through the API. A service principal has been added to the Power BI tenant for this purpose, and the application uses an access token from Microsoft's server to authenticate API calls. The access token retrieval function is located in the authentication folder. 
 
 ```python
 def getAccessToken(resource, client_id, client_secret, domain):
@@ -32,12 +33,12 @@ def getAccessToken(resource, client_id, client_secret, domain):
 
 ```
 
-Both the `clientId` as the `clientSecret` have been added to the to `KV-DENA` key vault. These are necessary to get access to the service principal. Since we do not want to use these secret identifiers to be part of the script, they need to be read from the vault directly. In order to do this we need to give our function access to the vault.
+Both the clientId and clientSecret have been stored in the KV-DENA key vault to avoid exposing sensitive information in the script. The function app needs access to the vault to retrieve these secrets securely.
 
 ### Adding Vault to Function App
-In order to give our function access to the vault we need to manually add this access in the Azure portal. First go to the DENA vault and go to the Access policies tab on the left and click on create.
+To grant the function app access to the vault, manual configuration is required in the Azure portal. Access policies in the DENA vault must be set up, allowing the function app to read the secrets. Specific secrets, such as the `clientId` and `clientSecret` for the Power BI API service principal, are added to the function app's application settings from the vault. This ensures that the secrets are read directly from the vault rather than being embedded in the script.
 ![image](https://github.com/ALeemans/function-app-refreshlogging/blob/master/dayly-refresh-info/images/acces-policies.png)
-Select get and list from the Secret permissions pane, this will allow the app to read from the vault.
+Select `get` and `list` from the Secret permissions pane, this will allow the app to read from the vault.
 ![image](https://github.com/ALeemans/function-app-refreshlogging/blob/master/dayly-refresh-info/images/get-list.png)
 Selecte the app you created from the principal list.
 ![image](https://github.com/ALeemans/function-app-refreshlogging/blob/master/dayly-refresh-info/images/select-principal.png)
@@ -51,14 +52,14 @@ Follow the same steps for the clientSecret and the webhook and incoming webhook.
 
 
 ### Writing the python code
-Now that we have can get access to the vault we can retrieve the secrets from the vault in our python scripts. This works similar as retrieving them from your environmental variables from your local pc. 
+Now that we can get access to the vault we can retrieve the secrets from the vault in our python scripts. This works similar as retrieving them from your environmental variables from your local pc. 
 
 ```python
 import os 
 clientId = os.getenv('clientId')
 clientSecret = os.getenv('clientSecret')
 ```
-Now that you have access to the API you can start writing your python script. Right now the only thing we want to know is whether or not a refresh has been successful, the following python class checks for this.
+With theses secrets we can have access to the API and you can start writing your python script. Right now the only thing we want to know is whether or not a refresh has been successful, the following python class checks for this.
 ```python
 
 # Create refresh class
@@ -135,12 +136,12 @@ If error persists please contact system administrator!!''')
 
 
 ```
-The two input variables form the class are the accesstoken (which can be retrieved with the definition that was show earlier) and the workspace name. Right now, we only want to check de D&A prod data sources workspace. What the script does is check all dataset ID’s and names that are in the specified workspace. It takes these Id's and checks the refresh log from the following endpoint: `https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/datasets/{datasetId}/refreshes`. It returns a data frame with info on all those datasets. This information is stored and will later be used to send out a teams message.
+The two input variables for the class are the accesstoken (which can be retrieved with the definition that was show earlier) and the workspace name. Right now, we only want to check de D&A prod data sources workspace. What the script does is check all dataset ID’s and names that are in the specified workspace. It takes these Id's and checks the refresh log from the following endpoint: `https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/datasets/{datasetId}/refreshes`. It returns a data frame with info on all those datasets. This information is stored and will later be used to send out a teams message.
 
 ### Post messages to Team channel
 Now that we have our refresh information, we can send a message to the team’s channel. In order to do this, we need to set up a connection with the Webhook application in Microsoft teams (you need to request access with the IT department). Please check the [documentation](https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=dotnet) on how to setup the webhook. 
 
-Once you have set this up you have a connection string to teams. Add both the webhook and the incomingwebhook keys to the vault. With the following python code you can send updates:
+Once you have set this up you have a connection to teams, with the following python code you can send updates:
 
 ```python
 def sendTeamsAlert(dataframe,webhook,incomingwebhook):       
@@ -208,7 +209,8 @@ def sendTeamsAlert(dataframe,webhook,incomingwebhook):
 
 
 
-## Deploying the function app with time trigger 
 
-Now that your app is completed it can be deployed to the function on Azure. Before we do this however we need to set the time, this is done with a [cron expression](https://en.wikipedia.org/wiki/Cron#CRON_expression) in the `function.json` file on the schedule line. A cron expression is a string with 6 separate expressions which represent a given schedule via patterns. The pattern we use to represent every 5 minutes is `0 */5 * * * *`. This, in plain text, means: "When seconds is equal to 0, minutes is divisible by 5, for any hour, day of the month, month, day of the week, or year". Our app is set to run every weekday at 7 in the morning. `schedule": "0 0 7 * * 1-5`
+### Deploying the function app with time trigger 
+
+Now that your app is completed in can be deployed to the function on Azure. Before we do this however we need to set the time, this is done with a [cron expression](https://en.wikipedia.org/wiki/Cron#CRON_expression) in the `function.json` file on the schedule line. A cron expression is a string with 6 separate expressions which represent a given schedule via patterns. The pattern we use to represent every 5 minutes is `0 */5 * * * *`. This, in plain text, means: "When seconds is equal to 0, minutes is divisible by 5, for any hour, day of the month, month, day of the week, or year". Our app is set to run every weekday at 7 in the morning. `schedule": "0 0 7 * * 1-5`
 
