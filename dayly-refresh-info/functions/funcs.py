@@ -132,7 +132,7 @@ def sendTeamsAlert(dataframe,webhook,incomingwebhook):
                 "summary": "Daily fresh",
                 "sections": [
                     {
-                        "activityTitle": "Daily fresh",
+                        "activityTitle": "Daily refresh",
                         "activitySubtitle": "",
                         "activityImage": "",
                         "facts": [
@@ -158,7 +158,7 @@ def sendTeamsAlert(dataframe,webhook,incomingwebhook):
             "summary": "Daily fresh",
             "sections": [
                 {
-                    "activityTitle": "Daily fresh",
+                    "activityTitle": "Daily refresh",
                     "activitySubtitle": "",
                     "activityImage": "",
                     "facts": [
