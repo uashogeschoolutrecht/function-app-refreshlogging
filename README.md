@@ -1,19 +1,20 @@
 # Refresh logging Power BI datasets
 
 ## Introduction
+
 The purpose of this application is to provide updates on the refresh status of Power BI datasets. The application utilizes a Python script to retrieve data from the Power BI tenant and post messages to the Data & Analytics team's channel. The application is deployed as an Azure function app.
 
-
 ### Setting up the Function App
+
 Before writing the application, you need to set up a [function app](https://learn.microsoft.com/en-us/azure/azure-functions/functions-overview?pivots=programming-language-python) in Azure where the application can be deployed. A function app is a script (in this case, a Python script) stored on an Azure server that can be triggered in various ways, such as a time trigger.
 
 ![image](https://github.com/ALeemans/function-app-refreshlogging/blob/master/dayly-refresh-info/images/trigger-flow.png)
 
-The app named  `pbi-refresh-logging` is created on the `HU-PLG-DWH-DataPlatfrom` resource in the DENA Azure portal. The application is created in Visual Studio Code, and a local template is generated from the Azure functions extension, specifically using the Python time trigger template. This provides essential files to begin development, including `function.json` for time trigger configuration and `__init__.py file` to run the Python script.
+The app named  `pbi-refresh-logging` is created on the `HU-PLG-DWH-DataPlatfrom` resource in the DENA Azure portal ([link](https://portal.azure.com/?pwa=1#@hogeschoolutrecht.onmicrosoft.com/resource/subscriptions/dd96555a-247b-43aa-b02b-b1a7f15e5916/resourceGroups/pbirefreshlogging/providers/Microsoft.Web/sites/pbi-refresh-logging/appServices), only accessible to team D&A members). The application is created in Visual Studio Code, and a local template is generated from the Azure functions extension, specifically using the Python time trigger template. This provides essential files to begin development, including `function.json` for time trigger configuration and `__init__.py file` to run the Python script.
 
 ### Getting Dataset Information
 
-The primary objective of the app is to retrieve daily updates on the success of dataset refreshes. To achieve this, the application needs to fetch information from the HU Power BI tenant through the API. A service principal has been added to the Power BI tenant for this purpose, and the application uses an access token from Microsoft's server to authenticate API calls. The access token retrieval function is located in the authentication folder. 
+The primary objective of the app is to retrieve daily updates on the success of dataset refreshes. To achieve this, the application needs to fetch information from the HU Power BI tenant through the API. A service principal has been added to the Power BI tenant for this purpose, and the application uses an access token from Microsoft's server to authenticate API calls. The access token retrieval function is located in the authentication script:
 
 ```python
 def getAccessToken(resource, client_id, client_secret, domain):
@@ -36,6 +37,7 @@ def getAccessToken(resource, client_id, client_secret, domain):
 Both the clientId and clientSecret have been stored in the KV-DENA key vault to avoid exposing sensitive information in the script. The function app needs access to the vault to retrieve these secrets securely.
 
 ### Adding Vault to Function App
+
 To grant the function app access to the vault, manual configuration is required in the Azure portal. Access policies in the DENA vault must be set up, allowing the function app to read the secrets. Specific secrets, such as the `clientId` and `clientSecret` for the Power BI API service principal, are added to the function app's application settings from the vault. This ensures that the secrets are read directly from the vault rather than being embedded in the script.
 ![image](https://github.com/ALeemans/function-app-refreshlogging/blob/master/dayly-refresh-info/images/acces-policies.png)
 Select `get` and `list` from the Secret permissions pane, this will allow the app to read from the vault.
@@ -44,23 +46,27 @@ Selecte the app you created from the principal list.
 ![image](https://github.com/ALeemans/function-app-refreshlogging/blob/master/dayly-refresh-info/images/select-principal.png)
 The app now has access to the vault. You need to add access to specific secrets however. Browse to the vault secret you would like to use (in this case we need the clientId and the clientSecret from the Power BI API service principal) and click on the current version.
 ![image](https://github.com/ALeemans/function-app-refreshlogging/blob/master/dayly-refresh-info/images/vault-clientId.png)
-Copy the secret identifier and keep it in your clipboard. Browse to your function app in the azure portal and go to the configurations pane. 
+Copy the secret identifier and keep it in your clipboard. Browse to your function app in the azure portal and go to the configurations pane.
 ![image](https://github.com/ALeemans/function-app-refreshlogging/blob/master/dayly-refresh-info/images/config-pane-function.png)
 click on application setting, in the popup enter under name the name of the secret (in this case the clientId) and under value type `@Microsoft.KeyVault(SecretUri=<paste-from-clipboard.)` and paste the url that you just copied.
 ![image](https://github.com/ALeemans/function-app-refreshlogging/blob/master/dayly-refresh-info/images/application-setting.png)
-Follow the same steps for the clientSecret and the webhook and incoming webhook. All four have now been added to the function app and can be read from your python script. 
-
+Follow the same steps for the clientSecret and the webhook and incoming webhook. All four have now been added to the function app and can be read from your python script.
 
 ### Writing the python code
-Now that we can get access to the vault we can retrieve the secrets from the vault in our python scripts. This works similar as retrieving them from your environmental variables from your local pc. 
+
+Now that we can get access to the vault we can retrieve the secrets from the vault in our python scripts. This works similar as retrieving them from your environmental variables from your local pc.
 
 ```python
 import os 
 clientId = os.getenv('clientId')
 clientSecret = os.getenv('clientSecret')
+
 ```
+
 With theses secrets we can have access to the API and you can start writing your python script. Right now the only thing we want to know is whether or not a refresh has been successful, the following python class checks for this.
+
 ```python
+
 
 # Create refresh class
 class REFRESHDATASET:
@@ -136,10 +142,12 @@ If error persists please contact system administrator!!''')
 
 
 ```
+
 The two input variables for the class are the accesstoken (which can be retrieved with the definition that was show earlier) and the workspace name. Right now, we only want to check de D&A prod data sources workspace. What the script does is check all dataset ID’s and names that are in the specified workspace. It takes these Id's and checks the refresh log from the following endpoint: `https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/datasets/{datasetId}/refreshes`. It returns a data frame with info on all those datasets. This information is stored and will later be used to send out a teams message.
 
 ### Post messages to Team channel
-Now that we have our refresh information, we can send a message to the team’s channel. In order to do this, we need to set up a connection with the Webhook application in Microsoft teams (you need to request access with the IT department). Please check the [documentation](https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=dotnet) on how to setup the webhook. 
+
+Now that we have our refresh information, we can send a message to the team’s channel. In order to do this, we need to set up a connection with the Webhook application in Microsoft teams (you need to request access with the IT department). Please check the [documentation](https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=dotnet) on how to setup the webhook.
 
 Once you have set this up you have a connection to teams, with the following python code you can send updates:
 
@@ -207,10 +215,6 @@ def sendTeamsAlert(dataframe,webhook,incomingwebhook):
     
 ```
 
-
-
-
-### Deploying the function app with time trigger 
+### Deploying the function app with time trigger
 
 Now that your app is completed in can be deployed to the function on Azure. Before we do this however we need to set the time, this is done with a [cron expression](https://en.wikipedia.org/wiki/Cron#CRON_expression) in the `function.json` file on the schedule line. A cron expression is a string with 6 separate expressions which represent a given schedule via patterns. The pattern we use to represent every 5 minutes is `0 */5 * * * *`. This, in plain text, means: "When seconds is equal to 0, minutes is divisible by 5, for any hour, day of the month, month, day of the week, or year". Our app is set to run every weekday at 7 in the morning. `schedule": "0 0 7 * * 1-5`
-
