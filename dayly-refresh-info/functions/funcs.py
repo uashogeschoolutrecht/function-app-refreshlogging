@@ -92,11 +92,12 @@ If error persists please contact system administrator!!''')
     def getRefreshInfo(self):
         '''Load latest refresh info on the dataset'''
         output = pd.DataFrame()
+
         for id, name in zip(self.datasetIds, self.datasetNames):
             uri = f"https://api.powerbi.com/v1.0/myorg/groups/{self.workspaceId}/datasets/{id}/refreshes"
             headers = {'Authorization': f'Bearer {self.accessToken}'}
             response = requests.get(uri, headers=headers)
-            if response.status_code == 200:
+            if response.status_code == 200: # Import dataset refresh types
                 response = json.loads(response.content)
                 res = pd.concat([pd.json_normalize(x) for x in response['value']])
                 res.sort_values(by='startTime', ascending=False, inplace=True)
@@ -104,10 +105,11 @@ If error persists please contact system administrator!!''')
                 res = res.iloc[0]
                 results = pd.DataFrame({'datasetname': [name], 'status': [
                                     res['status']], 'lastrefresh': [res['startTime']]})
-            elif response.status_code == 415:
+            elif response.status_code == 415: # Direct query dataset refresh types
                 results = pd.DataFrame({'datasetname': [name], 'status': [
                                     'Direct query, no refresh info'], 'lastrefresh': ['n.v.t.']})
-            else:
+            else: # Other types of dataset refreshes, e.g. no refresh
+                results = pd.DataFrame()
                 continue
             output = pd.concat([output, results], ignore_index=True)
             output.reset_index(drop=True,inplace=True)
