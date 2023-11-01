@@ -1,8 +1,8 @@
 import datetime
 import logging
-from functions.authentication import getAccessToken
-from functions.funcs import REFRESHDATASET
-from functions.funcs import sendTeamsAlert
+from .functions.authentication import getAccessToken
+from .functions.funcs import REFRESHDATASET
+from .functions.funcs import sendTeamsAlert
 import azure.functions as func
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
