@@ -8,4 +8,4 @@ requests
 azure-identity
 azure-keyvault-secrets
 azure-functions
-sqlalchemy
+pypyodbc

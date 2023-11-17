@@ -211,29 +211,3 @@ def sendTeamsMessage(message_name,message_content,webhook,incomingwebhook):
     print(response.text)
 
 
-def readFromDB(USERNAME, PASSWORD, SERVER, DATABASE, SQLQUERY):
-    '''This function is used to read from a database and returns a table'''
-    from sqlalchemy.engine import URL
-    from sqlalchemy import create_engine
-    import pandas as pd
-    import sqlalchemy as sa
-
-    # get connection URL
-    connection_url = URL.create(
-        'mssql+pyodbc',
-        query={
-            'odbc_connect': 'Driver={ODBC Driver 18 for SQL Server};'
-            f'Server={SERVER};'
-            f'Database={DATABASE};'
-            'TrustServerCertificate=yes;'
-            f'UID={USERNAME};'
-            f'PWD={PASSWORD};'
-        },
-    )
-
-    engine = create_engine(connection_url)
-
-    with engine.begin() as conn:
-        df = pd.read_sql_query(sa.text(SQLQUERY), conn)
-
-    return df

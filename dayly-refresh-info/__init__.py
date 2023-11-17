@@ -69,15 +69,43 @@ def main(mytimer: func.TimerRequest) -> None:
     # Send teams message
     sendTeamsAlert(failed, webhook, incomingwebhook)
 
-    # COUNT ROWS IN D_SECURIRY TABLE
+    # DEF for reading from database
+    def readFromDB(SERVER, DATABASE, SQLQUERY, USERNAME, PASSWORD):
+        import pypyodbc
+        connection_string = (
+            'DRIVER={ODBC Driver 18 for SQL Server};'
+            f'Server={SERVER};'
+            f'Database={DATABASE};'
+            f'uid={USERNAME};'
+            f'pwd={PASSWORD};'
+            'TrustServerCertificate=yes'
+        )
+
+        # setup connection
+        cnxn = pypyodbc.connect(connection_string)
+        cursor = cnxn.cursor()
+        
+        # load data from query
+        cursor.execute(SQLQUERY) 
+        rows = cursor.fetchall()
+
+        # transform to df
+        import pandas as pd
+        df = pd.DataFrame.from_records(rows, columns=[x[0] for x in cursor.description])
+
+        return df
+
+    #COUNT ROWS IN D_SECURIRY TABLE
     dsec_count = readFromDB(
-        USERNAME = os.getenv('bodsproduser'),
-        PASSWORD = os.getenv('bodsprodpassword'),
         SERVER='DBND27.medewerkers.ad.hvu.nl',
         DATABASE='P_DM',
-        SQLQUERY= 'SELECT COUNT(*) FROM D_SECURITY'
-        )['AANTAL'][0]
+        SQLQUERY= 'SELECT COUNT(*) AS aantal FROM D_SECURITY',
+        USERNAME = os.getenv('bodsproduser'),
+        PASSWORD = os.getenv('bodsprodpassword')
+        )
+    dsec_count = dsec_count['aantal'][0]
     
+    #SEND MESSAGE TO TEAM CHANNEL IF ROWS ARE ABOVE 100
     if dsec_count > 100:
         sendTeamsMessage(
             message_name='D_SECURITY', 
@@ -85,6 +113,8 @@ def main(mytimer: func.TimerRequest) -> None:
             webhook=webhook, 
             incomingwebhook=incomingwebhook
             )
+        
+    # # SEND ERROR MESSAGE TO TEAM CHANNEL IF ROWS
     else:
         sendTeamsMessage(
             message_name='D_SECURITY', 
