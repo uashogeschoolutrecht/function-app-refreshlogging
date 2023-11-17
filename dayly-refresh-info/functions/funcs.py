@@ -120,7 +120,6 @@ If error persists please contact system administrator!!''')
 
 def sendTeamsAlert(dataframe,webhook,incomingwebhook):       
     # import libraries here
-    import os
     bot_url = f"https://hogeschoolutrecht.webhook.office.com/webhookb2/{webhook}/IncomingWebhook/{incomingwebhook}"
     headers = {
         'Content-Type': 'application/json'
@@ -180,3 +179,61 @@ def sendTeamsAlert(dataframe,webhook,incomingwebhook):
         print(response.text)
     
 
+def sendTeamsMessage(message_name,message_content,webhook,incomingwebhook):
+    bot_url = f"https://hogeschoolutrecht.webhook.office.com/webhookb2/{webhook}/IncomingWebhook/{incomingwebhook}"
+    headers = {
+        'Content-Type': 'application/json'
+    }
+    payload = json.dumps({
+        "@type": "MessageCard",
+        "@context": "http://schema.org/extensions",
+        "themeColor": "0076D7",
+        "summary": "Daily fresh",
+        "sections": [
+            {
+                "activityTitle": "Daily refresh",
+                "activitySubtitle": "",
+                "activityImage": "",
+                "facts": [
+                    {
+                    "name": f"{message_name}",
+                    "value": f"{message_content}"
+                    }
+                ],
+                "markdown": True
+            }
+
+        ]
+    }
+    )
+
+    response = requests.request("POST", bot_url, headers=headers, data=payload)
+    print(response.text)
+
+
+def readFromDB(USERNAME, PASSWORD, SERVER, DATABASE, SQLQUERY):
+    '''This function is used to read from a database and returns a table'''
+    from sqlalchemy.engine import URL
+    from sqlalchemy import create_engine
+    import pandas as pd
+    import sqlalchemy as sa
+
+    # get connection URL
+    connection_url = URL.create(
+        'mssql+pyodbc',
+        query={
+            'odbc_connect': 'Driver={ODBC Driver 18 for SQL Server};'
+            f'Server={SERVER};'
+            f'Database={DATABASE};'
+            'TrustServerCertificate=yes;'
+            f'UID={USERNAME};'
+            f'PWD={PASSWORD};'
+        },
+    )
+
+    engine = create_engine(connection_url)
+
+    with engine.begin() as conn:
+        df = pd.read_sql_query(sa.text(SQLQUERY), conn)
+
+    return df
