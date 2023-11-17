@@ -5,9 +5,6 @@ from .functions.funcs import REFRESHDATASET
 from .functions.funcs import sendTeamsAlert
 from .functions.funcs import sendTeamsMessage
 import azure.functions as func
-from azure.identity import DefaultAzureCredential
-from azure.keyvault.secrets import SecretClient
-from .functions.funcs import readFromDB
 
 def main(mytimer: func.TimerRequest) -> None:
     utc_timestamp = datetime.datetime.utcnow().replace(
