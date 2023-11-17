@@ -70,11 +70,13 @@ def main(mytimer: func.TimerRequest) -> None:
     def readFromDB(SERVER, DATABASE, SQLQUERY, USERNAME, PASSWORD):
         import pypyodbc
         connection_string = (
-            'DRIVER={ODBC Driver 18 for SQL Server};'
-            f'Server={SERVER};'
-            f'Database={DATABASE};'
-            f'uid={USERNAME};'
-            f'pwd={PASSWORD};'
+            # Function apps gebruikt op dit moment python 3.10 en die ondersteund ODBC 18 niet vandaar dat deze naar 17 is gezet.
+            # Let op bij updaten naar python 3.11 dat de driver naar 18 moet. 
+            'DRIVER={ODBC Driver 17 for SQL Server};' 
+            f'SERVER={SERVER};'
+            f'DATABASE={DATABASE};'
+            f'UID={USERNAME};'
+            f'PWD={PASSWORD};'
             'TrustServerCertificate=yes'
         )
 
